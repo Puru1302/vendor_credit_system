@@ -1,0 +1,692 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}Analytics · VendorCredit Pro{% endblock %}
+{% block page_title %}Advanced Business Analytics{% endblock %}
+
+{% block content %}
+
+<!-- Hero Analytics Header -->
+<div class="analytics-hero mb-4">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div>
+                <h2 class="fw-bold mb-2">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Financial Intelligence Dashboard
+                </h2>
+                <p class="mb-0 text-light opacity-75">
+                    Real-time purchase insights, GST analytics, vendor risk tracking & payment intelligence
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="d-flex justify-content-lg-end gap-2 flex-wrap">
+                <a href="{% url 'export_purchases' %}" class="btn btn-light">
+                    <i class="bi bi-file-earmark-excel me-1"></i>
+                    Export Report
+                </a>
+
+                <button class="btn btn-outline-light">
+                    <i class="bi bi-printer me-1"></i>
+                    Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-6 col-xl-3">
+        <div class="premium-card gradient-primary">
+            <div class="card-icon">
+                <i class="bi bi-currency-rupee"></i>
+            </div>
+
+            <div class="card-content">
+                <div class="card-label">Total GST</div>
+                <div class="card-value">₹{{ gst_total|floatformat:0 }}</div>
+                <div class="card-growth positive">
+                    <i class="bi bi-arrow-up-right"></i>
+                    +12.4% this month
+                </div>
+            </div>
+
+            <div class="card-wave"></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="premium-card gradient-success">
+            <div class="card-icon">
+                <i class="bi bi-wallet2"></i>
+            </div>
+
+            <div class="card-content">
+                <div class="card-label">Payments</div>
+                <div class="card-value">
+                    ₹{{ payment_modes.0.total|default:0|floatformat:0 }}
+                </div>
+                <div class="card-growth positive">
+                    <i class="bi bi-check-circle"></i>
+                    Healthy cash flow
+                </div>
+            </div>
+
+            <div class="card-wave"></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="premium-card gradient-warning">
+            <div class="card-icon">
+                <i class="bi bi-people"></i>
+            </div>
+
+            <div class="card-content">
+                <div class="card-label">Top Vendors</div>
+                <div class="card-value">{{ top_vendors|length }}</div>
+                <div class="card-growth neutral">
+                    <i class="bi bi-bar-chart"></i>
+                    Vendor activity
+                </div>
+            </div>
+
+            <div class="card-wave"></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="premium-card gradient-danger">
+            <div class="card-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="card-content">
+                <div class="card-label">Risk Analysis</div>
+                <div class="card-value">LOW</div>
+                <div class="card-growth positive">
+                    <i class="bi bi-shield-check"></i>
+                    Stable vendor credit
+                </div>
+            </div>
+
+            <div class="card-wave"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CHARTS -->
+<div class="row g-4 mb-4">
+
+    <!-- Annual Trend -->
+    <div class="col-xl-8">
+        <div class="glass-card h-100">
+            <div class="chart-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>
+                        12-Month Financial Trend
+                    </h5>
+                    <small class="text-muted">
+                        Purchase vs GST growth analysis
+                    </small>
+                </div>
+
+                <div class="chart-actions">
+                    <span class="badge bg-primary-subtle text-primary">
+                        LIVE DATA
+                    </span>
+                </div>
+            </div>
+
+            <div class="chart-body">
+                <canvas id="annualChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Mode -->
+    <div class="col-xl-4">
+        <div class="glass-card h-100">
+            <div class="chart-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-pie-chart-fill me-2 text-success"></i>
+                        Payment Distribution
+                    </h5>
+                    <small class="text-muted">
+                        Transaction mode analytics
+                    </small>
+                </div>
+            </div>
+
+            <div class="chart-body">
+                <canvas id="modeChart" height="240"></canvas>
+
+                <div class="payment-list mt-4">
+                    {% for m in payment_modes %}
+                    <div class="payment-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="payment-dot"></div>
+                            <span>{{ m.payment_mode|title }}</span>
+                        </div>
+
+                        <div class="text-end">
+                            <div class="fw-bold">
+                                ₹{{ m.total|floatformat:0 }}
+                            </div>
+                            <small class="text-muted">
+                                {{ m.count }} transactions
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECOND ROW -->
+<div class="row g-4 mb-4">
+
+    <!-- Vendor Ranking -->
+    <div class="col-xl-6">
+        <div class="glass-card h-100">
+
+            <div class="chart-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-trophy-fill me-2 text-warning"></i>
+                        Top Performing Vendors
+                    </h5>
+                    <small class="text-muted">
+                        Highest purchase contributors
+                    </small>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table premium-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Vendor</th>
+                            <th>Purchase</th>
+                            <th>Risk</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for v in top_vendors %}
+                        <tr>
+                            <td>
+                                <div class="rank-badge">
+                                    {{ forloop.counter }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <a href="{% url 'vendor_detail' v.pk %}"
+                                   class="vendor-link">
+                                    {{ v.name }}
+                                </a>
+                            </td>
+
+                            <td class="fw-bold text-primary">
+                                ₹{{ v.total|floatformat:0 }}
+                            </td>
+
+                            <td>
+                                <span class="risk-chip risk-{{ v.risk_level }}">
+                                    {{ v.risk_level }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Category Chart -->
+    <div class="col-xl-6">
+        <div class="glass-card h-100">
+
+            <div class="chart-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-grid-3x3-gap-fill me-2 text-info"></i>
+                        Category Analytics
+                    </h5>
+                    <small class="text-muted">
+                        Category-wise purchase volume
+                    </small>
+                </div>
+            </div>
+
+            <div class="chart-body">
+                <canvas id="catAnalyticsChart" height="260"></canvas>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+
+.analytics-hero{
+    background: linear-gradient(135deg,#111827,#1e3a8a,#2563eb);
+    border-radius: 24px;
+    padding: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.analytics-hero::before{
+    content:'';
+    position:absolute;
+    width:300px;
+    height:300px;
+    background:rgba(255,255,255,0.08);
+    border-radius:50%;
+    top:-120px;
+    right:-100px;
+}
+
+.premium-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:24px;
+    padding:1.7rem;
+    color:white;
+    min-height:170px;
+    box-shadow:0 12px 35px rgba(0,0,0,0.12);
+    transition:0.35s ease;
+}
+
+.premium-card:hover{
+    transform:translateY(-6px);
+}
+
+.gradient-primary{
+    background:linear-gradient(135deg,#4361ee,#3a0ca3);
+}
+
+.gradient-success{
+    background:linear-gradient(135deg,#06d6a0,#118ab2);
+}
+
+.gradient-warning{
+    background:linear-gradient(135deg,#ff9f1c,#ffbf69);
+}
+
+.gradient-danger{
+    background:linear-gradient(135deg,#ef476f,#d90429);
+}
+
+.card-icon{
+    width:60px;
+    height:60px;
+    border-radius:18px;
+    background:rgba(255,255,255,0.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    margin-bottom:1rem;
+    backdrop-filter:blur(6px);
+}
+
+.card-label{
+    font-size:.9rem;
+    opacity:.8;
+}
+
+.card-value{
+    font-size:2rem;
+    font-weight:800;
+    margin:6px 0;
+}
+
+.card-growth{
+    font-size:.85rem;
+}
+
+.card-wave{
+    position:absolute;
+    width:200px;
+    height:200px;
+    background:rgba(255,255,255,0.08);
+    border-radius:50%;
+    right:-60px;
+    bottom:-90px;
+}
+
+.glass-card{
+    background:rgba(255,255,255,0.92);
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,0.3);
+    backdrop-filter:blur(14px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    overflow:hidden;
+}
+
+.chart-header{
+    padding:1.4rem 1.5rem;
+    border-bottom:1px solid #edf2f7;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.chart-body{
+    padding:1.5rem;
+}
+
+.payment-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px dashed #e5e7eb;
+}
+
+.payment-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#4361ee;
+}
+
+.premium-table thead{
+    background:#f8fafc;
+}
+
+.premium-table th{
+    font-size:.85rem;
+    color:#64748b;
+    font-weight:700;
+    border:none;
+    padding:1rem;
+}
+
+.premium-table td{
+    border:none;
+    padding:1rem;
+}
+
+.rank-badge{
+    width:36px;
+    height:36px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#4361ee,#3a0ca3);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.vendor-link{
+    text-decoration:none;
+    font-weight:600;
+    color:#111827;
+}
+
+.vendor-link:hover{
+    color:#4361ee;
+}
+
+.risk-chip{
+    padding:.45rem .9rem;
+    border-radius:999px;
+    font-size:.75rem;
+    font-weight:700;
+    text-transform:uppercase;
+}
+
+.risk-low{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.risk-medium{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.risk-high{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+@media(max-width:768px){
+
+    .analytics-hero{
+        padding:1.5rem;
+    }
+
+    .card-value{
+        font-size:1.6rem;
+    }
+
+}
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+const labels = {{ monthly_labels|safe }};
+const purchases = {{ monthly_purchases|safe }};
+const gst = {{ monthly_gst|safe }};
+
+// ===== Annual Trend =====
+
+const annualCtx = document.getElementById('annualChart');
+
+new Chart(annualCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+
+        datasets: [
+
+            {
+                label: 'Purchases',
+                data: purchases,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67,97,238,0.12)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                borderWidth: 3,
+            },
+
+            {
+                label: 'GST',
+                data: gst,
+                borderColor: '#06d6a0',
+                backgroundColor: 'rgba(6,214,160,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                borderWidth: 3,
+            }
+
+        ]
+    },
+
+    options: {
+        responsive: true,
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    padding: 20
+                }
+            }
+        },
+
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+
+            y: {
+                beginAtZero: true,
+
+                ticks: {
+                    callback: function(value){
+                        return '₹' + value.toLocaleString('en-IN');
+                    }
+                },
+
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                }
+            }
+        }
+    }
+});
+
+
+// ===== Payment Pie =====
+
+const modeData = {{ payment_modes|safe }};
+
+new Chart(document.getElementById('modeChart'), {
+
+    type: 'doughnut',
+
+    data: {
+
+        labels: modeData.map(m => m.payment_mode),
+
+        datasets: [{
+            data: modeData.map(m => parseFloat(m.total)),
+            backgroundColor: [
+                '#4361ee',
+                '#06d6a0',
+                '#f72585',
+                '#ffbe0b',
+                '#4cc9f0'
+            ],
+            hoverOffset: 10,
+            borderWidth: 0,
+        }]
+    },
+
+    options: {
+        cutout: '68%',
+
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+
+// ===== Category Analytics =====
+
+const catData = {{ cat_wise|safe }};
+
+new Chart(document.getElementById('catAnalyticsChart'), {
+
+    type: 'bar',
+
+    data: {
+
+        labels: catData.map(c =>
+            c.item__category__name || 'Uncategorized'
+        ),
+
+        datasets: [{
+            label:'Purchase Volume',
+
+            data: catData.map(c =>
+                parseFloat(c.total)
+            ),
+
+            borderRadius: 12,
+
+            backgroundColor: [
+                '#4361ee',
+                '#06d6a0',
+                '#f72585',
+                '#ffbe0b',
+                '#4cc9f0',
+                '#8338ec'
+            ]
+        }]
+    },
+
+    options: {
+
+        indexAxis: 'y',
+
+        responsive: true,
+
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+
+        scales: {
+
+            x: {
+
+                beginAtZero: true,
+
+                ticks: {
+                    callback: function(value){
+                        return '₹' + value.toLocaleString('en-IN');
+                    }
+                },
+
+                grid: {
+                    color:'rgba(0,0,0,0.05)'
+                }
+            },
+
+            y: {
+                grid: {
+                    display:false
+                }
+            }
+        }
+    }
+});
+
+</script>
+
+{% endblock %}

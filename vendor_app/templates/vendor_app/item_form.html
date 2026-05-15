@@ -1,28 +1,273 @@
 {% extends 'vendor_app/base.html' %}
 {% block title %}Add Item · VendorCredit Pro{% endblock %}
 {% block page_title %}Add Item{% endblock %}
+
 {% block content %}
+
+<style>
+    .glass-card{
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .glass-card::before{
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        background: linear-gradient(135deg,#0d6efd,#6f42c1);
+        border-radius: 50%;
+        top: -80px;
+        right: -80px;
+        opacity: 0.15;
+    }
+
+    .glass-card::after{
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        background: linear-gradient(135deg,#20c997,#0dcaf0);
+        border-radius: 50%;
+        bottom: -70px;
+        left: -70px;
+        opacity: 0.12;
+    }
+
+    .form-header{
+        background: linear-gradient(135deg,#0d6efd,#6610f2);
+        padding: 28px;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+
+    .form-header h3{
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .form-header p{
+        margin: 0;
+        opacity: 0.85;
+    }
+
+    .form-body{
+        padding: 35px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .form-label{
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #343a40;
+    }
+
+    .form-control,
+    .form-select,
+    textarea{
+        border-radius: 14px !important;
+        border: 1px solid #dfe3ea !important;
+        padding: 12px 16px !important;
+        transition: all 0.3s ease;
+        background: #f8f9fc;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea:focus{
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 4px rgba(13,110,253,0.15) !important;
+        background: white;
+        transform: translateY(-1px);
+    }
+
+    .input-group-text{
+        border-radius: 14px 0 0 14px;
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 0 18px;
+    }
+
+    .btn-save{
+        background: linear-gradient(135deg,#0d6efd,#6610f2);
+        border: none;
+        color: white;
+        padding: 12px 28px;
+        border-radius: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(13,110,253,0.25);
+    }
+
+    .btn-save:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 14px 25px rgba(13,110,253,0.35);
+    }
+
+    .btn-cancel{
+        border-radius: 14px;
+        padding: 12px 24px;
+        font-weight: 600;
+    }
+
+    .field-card{
+        background: white;
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid #eef1f5;
+        transition: all 0.3s ease;
+    }
+
+    .field-card:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+    }
+
+    .icon-box{
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.2);
+        font-size: 22px;
+    }
+</style>
+
 <div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="form-card">
-            <h5 class="fw-bold mb-4">Add Item / SKU</h5>
-            <form method="post">
-                {% csrf_token %}
-                <div class="row g-3">
-                    <div class="col-12"><label class="form-label">Item Name *</label>{{ form.name }}</div>
-                    <div class="col-md-6"><label class="form-label">Category</label>{{ form.category }}</div>
-                    <div class="col-md-6"><label class="form-label">Unit</label>{{ form.unit }}</div>
-                    <div class="col-md-6"><label class="form-label">Default GST</label>{{ form.default_gst_rate }}</div>
-                    <div class="col-md-6"><label class="form-label">Selling Price (₹)</label>{{ form.selling_price }}</div>
-                    <div class="col-12"><label class="form-label">Description</label>{{ form.description }}</div>
+    <div class="col-xl-8 col-lg-9">
+
+        <div class="glass-card">
+
+            <!-- Header -->
+            <div class="form-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3><i class="bi bi-box-seam me-2"></i>Add New Item</h3>
+                    <p>Create and manage your product inventory professionally</p>
                 </div>
-                <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i> Save</button>
-                    <a href="{% url 'item_list' %}" class="btn btn-light">Cancel</a>
+
+                <div class="icon-box">
+                    <i class="bi bi-bag-plus"></i>
                 </div>
-                {% if form.errors %}<div class="alert alert-danger mt-3">{{ form.errors }}</div>{% endif %}
-            </form>
+            </div>
+
+            <!-- Form Body -->
+            <div class="form-body">
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+
+                        <!-- Item Name -->
+                        <div class="col-12">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-tag me-1 text-primary"></i>
+                                    Item Name *
+                                </label>
+                                {{ form.name }}
+                            </div>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-6">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-grid me-1 text-primary"></i>
+                                    Category
+                                </label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+
+                        <!-- Unit -->
+                        <div class="col-md-6">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-boxes me-1 text-primary"></i>
+                                    Unit
+                                </label>
+                                {{ form.unit }}
+                            </div>
+                        </div>
+
+                        <!-- GST -->
+                        <div class="col-md-6">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-percent me-1 text-primary"></i>
+                                    Default GST
+                                </label>
+                                {{ form.default_gst_rate }}
+                            </div>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="col-md-6">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-currency-rupee me-1 text-primary"></i>
+                                    Selling Price
+                                </label>
+
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.selling_price }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <div class="field-card">
+                                <label class="form-label">
+                                    <i class="bi bi-card-text me-1 text-primary"></i>
+                                    Description
+                                </label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-3 mt-5">
+
+                        <button type="submit" class="btn btn-save">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Save Item
+                        </button>
+
+                        <a href="{% url 'item_list' %}" class="btn btn-light btn-cancel">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Cancel
+                        </a>
+
+                    </div>
+
+                    <!-- Errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-4 rounded-4">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ form.errors }}
+                    </div>
+                    {% endif %}
+
+                </form>
+
+            </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

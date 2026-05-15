@@ -1,0 +1,61 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}Record Payment · VendorCredit Pro{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="form-card">
+            <h5 class="fw-bold mb-4">Record Payment</h5>
+            {% if purchase %}
+            <div class="alert alert-info mb-3">
+                <strong>Invoice:</strong> {{ purchase.invoice_number }} |
+                <strong>Balance Due:</strong> ₹{{ purchase.balance_due|floatformat:2 }}
+            </div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Vendor *</label>
+                        {{ form.vendor }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Purchase (optional)</label>
+                        {{ form.purchase }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Amount (₹) *</label>
+                        {{ form.amount }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Date</label>
+                        {{ form.payment_date }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Mode</label>
+                        {{ form.payment_mode }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Reference / UTR No.</label>
+                        {{ form.reference_number }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1"></i> Record Payment
+                    </button>
+                    <a href="{% url 'purchase_list' %}" class="btn btn-light">Cancel</a>
+                </div>
+                {% if form.errors %}
+                <div class="alert alert-danger mt-3">{{ form.errors }}</div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

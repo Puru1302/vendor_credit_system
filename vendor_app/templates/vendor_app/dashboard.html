@@ -3,244 +3,859 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Stat Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(67,97,238,.12);color:#4361ee;">
-                <i class="bi bi-people-fill"></i>
+
+<!-- HERO HEADER -->
+<div class="dashboard-hero mb-4">
+    <div class="hero-overlay"></div>
+
+    <div class="position-relative z-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h2 class="fw-bold text-white mb-1">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Vendor Intelligence Dashboard
+                </h2>
+                <p class="text-light opacity-75 mb-0">
+                    Smart analytics, AI vendor insights & real-time financial overview
+                </p>
             </div>
-            <div class="stat-value">{{ total_vendors }}</div>
-            <div class="stat-label">Active Vendors</div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(76,201,240,.12);color:#4cc9f0;">
-                <i class="bi bi-cart-fill"></i>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'purchase_create' %}" class="btn btn-light fw-semibold shadow-sm">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    New Purchase
+                </a>
+
+                <a href="#" class="btn btn-outline-light">
+                    <i class="bi bi-download me-1"></i>
+                    Export Report
+                </a>
             </div>
-            <div class="stat-value">₹{{ monthly_purchases|floatformat:0 }}</div>
-            <div class="stat-label">This Month Purchases</div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(239,71,111,.12);color:#ef476f;">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-            <div class="stat-value">₹{{ total_outstanding|floatformat:0 }}</div>
-            <div class="stat-label">Total Outstanding</div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(6,214,160,.12);color:#06d6a0;">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
-            <div class="stat-value">₹{{ total_estimated_profit|floatformat:0 }}</div>
-            <div class="stat-label">Estimated Profit</div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row g-3 mb-4">
+<!-- TOP STATS -->
+<div class="row g-4 mb-4">
+
+    <!-- Card -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="modern-card stat-glow-primary">
+            <div class="card-pattern"></div>
+
+            <div class="d-flex justify-content-between align-items-start position-relative">
+                <div>
+                    <div class="mini-label">ACTIVE VENDORS</div>
+                    <h2 class="stat-number">{{ total_vendors }}</h2>
+                    <div class="growth-text positive">
+                        <i class="bi bi-arrow-up-right"></i>
+                        +12% this month
+                    </div>
+                </div>
+
+                <div class="modern-icon primary-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="modern-card stat-glow-info">
+            <div class="card-pattern"></div>
+
+            <div class="d-flex justify-content-between align-items-start position-relative">
+                <div>
+                    <div class="mini-label">MONTH PURCHASES</div>
+                    <h2 class="stat-number">₹{{ monthly_purchases|floatformat:0 }}</h2>
+                    <div class="growth-text positive">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Strong buying trend
+                    </div>
+                </div>
+
+                <div class="modern-icon info-icon">
+                    <i class="bi bi-cart-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="modern-card stat-glow-danger">
+            <div class="card-pattern"></div>
+
+            <div class="d-flex justify-content-between align-items-start position-relative">
+                <div>
+                    <div class="mini-label">OUTSTANDING</div>
+                    <h2 class="stat-number">₹{{ total_outstanding|floatformat:0 }}</h2>
+                    <div class="growth-text negative">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Needs attention
+                    </div>
+                </div>
+
+                <div class="modern-icon danger-icon">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="modern-card stat-glow-success">
+            <div class="card-pattern"></div>
+
+            <div class="d-flex justify-content-between align-items-start position-relative">
+                <div>
+                    <div class="mini-label">ESTIMATED PROFIT</div>
+                    <h2 class="stat-number">₹{{ total_estimated_profit|floatformat:0 }}</h2>
+                    <div class="growth-text positive">
+                        <i class="bi bi-stars"></i>
+                        Excellent growth
+                    </div>
+                </div>
+
+                <div class="modern-icon success-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- CHARTS -->
+<div class="row g-4 mb-4">
+
+    <!-- Trend Chart -->
     <div class="col-lg-8">
-        <div class="chart-card h-100">
-            <h6><i class="bi bi-bar-chart-line me-2"></i>Monthly Purchase Trend</h6>
-            <canvas id="monthlyChart" height="100"></canvas>
+        <div class="glass-card h-100">
+            <div class="section-header">
+                <div>
+                    <h5 class="mb-1 fw-bold">
+                        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>
+                        Monthly Purchase Analytics
+                    </h5>
+                    <small class="text-muted">
+                        AI-powered purchase monitoring
+                    </small>
+                </div>
+
+                <div class="chart-badge">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    LIVE
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
         </div>
     </div>
+
+    <!-- Pie -->
     <div class="col-lg-4">
-        <div class="chart-card h-100">
-            <h6><i class="bi bi-pie-chart me-2"></i>Category Breakdown</h6>
-            <canvas id="catChart"></canvas>
+        <div class="glass-card h-100">
+            <div class="section-header">
+                <div>
+                    <h5 class="mb-1 fw-bold">
+                        <i class="bi bi-pie-chart-fill me-2 text-warning"></i>
+                        Category Breakdown
+                    </h5>
+
+                    <small class="text-muted">
+                        Spending distribution
+                    </small>
+                </div>
+            </div>
+
+            <div class="chart-container-sm">
+                <canvas id="catChart"></canvas>
+            </div>
         </div>
     </div>
+
 </div>
 
-<!-- Alerts + Risk + Today Row -->
-<div class="row g-3 mb-4">
-    <!-- Overdue Reminders -->
+<!-- ALERTS -->
+<div class="row g-4 mb-4">
+
+    <!-- REMINDERS -->
     <div class="col-lg-6">
-        <div class="chart-card h-100">
-            <h6><i class="bi bi-bell-fill me-2" style="color:#ffd60a;"></i>
-                Pending Reminders
+        <div class="glass-card h-100">
+
+            <div class="section-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-bell-fill text-warning me-2"></i>
+                        Payment Reminders
+                    </h5>
+
+                    <small class="text-muted">
+                        Upcoming and overdue payments
+                    </small>
+                </div>
+
                 {% if overdue_count > 0 %}
-                <span class="badge bg-danger ms-1">{{ overdue_count }} overdue</span>
+                <span class="badge rounded-pill bg-danger px-3 py-2">
+                    {{ overdue_count }} Overdue
+                </span>
                 {% endif %}
-            </h6>
+            </div>
+
             {% if reminders %}
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead><tr>
-                        <th>Vendor</th><th>Invoice</th><th>Due</th><th>Balance</th>
-                    </tr></thead>
-                    <tbody>
-                    {% for r in reminders %}
-                    <tr>
-                        <td><a href="{% url 'vendor_detail' r.vendor.pk %}">{{ r.vendor.name }}</a></td>
-                        <td><a href="{% url 'purchase_detail' r.pk %}">{{ r.invoice_number }}</a></td>
-                        <td>
-                            {% if r.days_overdue > 0 %}
-                            <span class="overdue-dot"></span>
-                            <span class="text-danger fw-semibold">{{ r.due_date }} ({{ r.days_overdue }}d late)</span>
-                            {% else %}
-                            <span class="text-warning">{{ r.due_date }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="fw-bold">₹{{ r.balance_due|floatformat:0 }}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div class="reminder-wrapper">
+
+                {% for r in reminders %}
+                <div class="reminder-card">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <h6 class="mb-1 fw-bold">
+                                {{ r.vendor.name }}
+                            </h6>
+
+                            <div class="small text-muted mb-2">
+                                Invoice : {{ r.invoice_number }}
+                            </div>
+
+                            <div>
+                                {% if r.days_overdue > 0 %}
+                                <span class="text-danger fw-semibold">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    {{ r.days_overdue }} Days Late
+                                </span>
+                                {% else %}
+                                <span class="text-warning fw-semibold">
+                                    Due : {{ r.due_date }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <div class="fw-bold fs-5 text-dark">
+                                ₹{{ r.balance_due|floatformat:0 }}
+                            </div>
+
+                            <a href="{% url 'purchase_detail' r.pk %}"
+                               class="btn btn-sm btn-dark mt-2">
+                                View
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+                {% endfor %}
+
             </div>
             {% else %}
-            <div class="text-center py-4 text-muted">
-                <i class="bi bi-check-circle fs-2 d-block mb-2" style="color:#06d6a0;"></i>
-                No pending reminders!
+            <div class="empty-state">
+                <i class="bi bi-check-circle-fill"></i>
+                <h6>No pending reminders</h6>
             </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- High Risk Vendors -->
+    <!-- AI RISK -->
     <div class="col-lg-6">
-        <div class="chart-card h-100">
-            <h6><i class="bi bi-shield-exclamation me-2" style="color:#ef476f;"></i>AI Risk Alerts</h6>
+        <div class="glass-card h-100">
+
+            <div class="section-header">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-cpu-fill text-danger me-2"></i>
+                        AI Risk Detection
+                    </h5>
+
+                    <small class="text-muted">
+                        Vendor behavior prediction
+                    </small>
+                </div>
+            </div>
+
             {% if high_risk_vendors %}
+
             {% for v in high_risk_vendors %}
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="flex-shrink-0" style="width:38px;height:38px;border-radius:10px;background:rgba(239,71,111,.1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#ef476f;">
-                    {{ v.name|first|upper }}
-                </div>
-                <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <a href="{% url 'vendor_detail' v.pk %}" class="fw-semibold text-dark text-decoration-none">{{ v.name }}</a>
-                        <span class="risk-badge risk-HIGH">{{ v.risk_score }}/100</span>
+            <div class="risk-modern-card">
+
+                <div class="d-flex gap-3">
+
+                    <div class="risk-avatar">
+                        {{ v.name|first|upper }}
                     </div>
-                    <div class="risk-progress">
-                        <div class="risk-fill" style="width:{{ v.risk_score }}%;background:{% if v.risk_score > 60 %}#ef476f{% elif v.risk_score > 30 %}#ffd60a{% else %}#06d6a0{% endif %};"></div>
+
+                    <div class="flex-grow-1">
+
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold mb-1">
+                                {{ v.name }}
+                            </h6>
+
+                            <span class="risk-score">
+                                {{ v.risk_score }}%
+                            </span>
+                        </div>
+
+                        <div class="progress modern-progress mb-2">
+                            <div class="progress-bar"
+                                 style="width:{{ v.risk_score }}%">
+                            </div>
+                        </div>
+
+                        <div class="small text-muted">
+                            Outstanding : ₹{{ v.outstanding_balance|floatformat:0 }}
+                        </div>
+
                     </div>
-                    <small class="text-muted">Outstanding: ₹{{ v.outstanding_balance|floatformat:0 }}</small>
                 </div>
+
             </div>
             {% endfor %}
+
             {% else %}
-            <div class="text-center py-4 text-muted">
-                <i class="bi bi-shield-check fs-2 d-block mb-2" style="color:#06d6a0;"></i>
-                All vendors are low risk!
+            <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                <h6>All vendors are safe</h6>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Today's Purchases -->
-<div class="data-table">
-    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-today me-2"></i>Today's Purchases ({{ today }})</h6>
-        <a href="{% url 'purchase_create' %}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg"></i> Add Purchase
+<!-- TODAY TABLE -->
+<div class="glass-card">
+
+    <div class="section-header">
+        <div>
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-calendar2-week-fill text-primary me-2"></i>
+                Today's Purchases
+            </h5>
+
+            <small class="text-muted">
+                {{ today }}
+            </small>
+        </div>
+
+        <a href="{% url 'purchase_create' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-plus-lg me-1"></i>
+            Add Purchase
         </a>
     </div>
+
     {% if today_purchases %}
     <div class="table-responsive">
-        <table class="table">
-            <thead><tr>
-                <th>Invoice</th><th>Vendor</th><th>Subtotal</th>
-                <th>GST</th><th>Total</th><th>Status</th><th></th>
-            </tr></thead>
+        <table class="table modern-table align-middle">
+
+            <thead>
+            <tr>
+                <th>Invoice</th>
+                <th>Vendor</th>
+                <th>Subtotal</th>
+                <th>GST</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            </thead>
+
             <tbody>
+
             {% for p in today_purchases %}
             <tr>
-                <td class="fw-semibold font-monospace">{{ p.invoice_number }}</td>
-                <td><a href="{% url 'vendor_detail' p.vendor.pk %}">{{ p.vendor.name }}</a></td>
-                <td>₹{{ p.subtotal|floatformat:2 }}</td>
-                <td><span class="badge bg-light text-dark">{{ p.gst_rate }}%</span> ₹{{ p.gst_amount|floatformat:2 }}</td>
-                <td class="fw-bold">₹{{ p.total_amount|floatformat:2 }}</td>
+
+                <td class="fw-bold text-primary">
+                    {{ p.invoice_number }}
+                </td>
+
                 <td>
-                    <span class="risk-badge status-{{ p.payment_status }}">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="table-avatar">
+                            {{ p.vendor.name|first|upper }}
+                        </div>
+
+                        <div class="fw-semibold">
+                            {{ p.vendor.name }}
+                        </div>
+                    </div>
+                </td>
+
+                <td>₹{{ p.subtotal|floatformat:2 }}</td>
+
+                <td>
+                    <span class="badge bg-light text-dark">
+                        {{ p.gst_rate }}%
+                    </span>
+
+                    ₹{{ p.gst_amount|floatformat:2 }}
+                </td>
+
+                <td class="fw-bold fs-6">
+                    ₹{{ p.total_amount|floatformat:2 }}
+                </td>
+
+                <td>
+                    <span class="status-pill status-{{ p.payment_status }}">
                         {{ p.get_payment_status_display }}
                     </span>
                 </td>
+
                 <td>
-                    <a href="{% url 'purchase_detail' p.pk %}" class="btn btn-sm btn-light">
-                        <i class="bi bi-eye"></i>
+                    <a href="{% url 'purchase_detail' p.pk %}"
+                       class="btn btn-dark btn-sm rounded-circle">
+                        <i class="bi bi-arrow-right"></i>
                     </a>
                 </td>
+
             </tr>
             {% endfor %}
+
             </tbody>
         </table>
     </div>
+
     {% else %}
-    <div class="text-center py-5 text-muted">
-        <i class="bi bi-inbox fs-1 d-block mb-3" style="color:#d0d5ee;"></i>
-        No purchases today. <a href="{% url 'purchase_create' %}">Add one?</a>
+    <div class="empty-state py-5">
+        <i class="bi bi-inbox-fill"></i>
+        <h5>No Purchases Today</h5>
+        <p class="text-muted">Start by adding a new purchase</p>
     </div>
     {% endif %}
+
 </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+
+/* BACKGROUND */
+
+body{
+    background:
+        radial-gradient(circle at top left,#edf2ff 0%,transparent 30%),
+        radial-gradient(circle at bottom right,#e0fbfc 0%,transparent 30%),
+        #f5f7fb;
+}
+
+/* HERO */
+
+.dashboard-hero{
+    position:relative;
+    overflow:hidden;
+    border-radius:28px;
+    padding:40px;
+    background:linear-gradient(135deg,#0f172a,#1e293b,#312e81);
+    box-shadow:0 20px 60px rgba(15,23,42,.25);
+}
+
+.dashboard-hero::before{
+    content:'';
+    position:absolute;
+    width:500px;
+    height:500px;
+    background:rgba(255,255,255,.06);
+    border-radius:50%;
+    top:-250px;
+    right:-150px;
+}
+
+.hero-overlay{
+    position:absolute;
+    inset:0;
+    backdrop-filter:blur(2px);
+}
+
+/* CARDS */
+
+.modern-card{
+    position:relative;
+    overflow:hidden;
+    background:#fff;
+    border-radius:24px;
+    padding:26px;
+    box-shadow:0 10px 35px rgba(15,23,42,.07);
+    transition:.35s ease;
+}
+
+.modern-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 25px 50px rgba(15,23,42,.12);
+}
+
+.card-pattern{
+    position:absolute;
+    top:-30px;
+    right:-30px;
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:rgba(0,0,0,.03);
+}
+
+.stat-number{
+    font-size:2rem;
+    font-weight:800;
+    margin-top:8px;
+    margin-bottom:10px;
+}
+
+.mini-label{
+    letter-spacing:1px;
+    font-size:.75rem;
+    font-weight:700;
+    color:#64748b;
+}
+
+.growth-text{
+    font-size:.85rem;
+    font-weight:600;
+}
+
+.positive{
+    color:#10b981;
+}
+
+.negative{
+    color:#ef4444;
+}
+
+/* ICON */
+
+.modern-icon{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+}
+
+.primary-icon{
+    background:rgba(67,97,238,.12);
+    color:#4361ee;
+}
+
+.info-icon{
+    background:rgba(14,165,233,.12);
+    color:#0ea5e9;
+}
+
+.success-icon{
+    background:rgba(16,185,129,.12);
+    color:#10b981;
+}
+
+.danger-icon{
+    background:rgba(239,68,68,.12);
+    color:#ef4444;
+}
+
+/* GLASS */
+
+.glass-card{
+    background:rgba(255,255,255,.75);
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.4);
+    border-radius:28px;
+    padding:26px;
+    box-shadow:0 12px 40px rgba(15,23,42,.08);
+}
+
+/* SECTION */
+
+.section-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+}
+
+.chart-badge{
+    background:#111827;
+    color:#fff;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:.75rem;
+    font-weight:700;
+}
+
+/* CHART */
+
+.chart-container{
+    position:relative;
+    height:340px;
+}
+
+.chart-container-sm{
+    position:relative;
+    height:320px;
+}
+
+/* REMINDER */
+
+.reminder-card{
+    background:#fff;
+    border-radius:20px;
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:0 5px 20px rgba(15,23,42,.05);
+}
+
+/* RISK */
+
+.risk-modern-card{
+    background:#fff;
+    padding:18px;
+    border-radius:20px;
+    margin-bottom:16px;
+}
+
+.risk-avatar{
+    width:50px;
+    height:50px;
+    border-radius:16px;
+    background:linear-gradient(135deg,#ef476f,#ff758f);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+}
+
+.risk-score{
+    font-weight:700;
+    color:#ef476f;
+}
+
+.modern-progress{
+    height:10px;
+    border-radius:999px;
+    overflow:hidden;
+    background:#edf2f7;
+}
+
+.modern-progress .progress-bar{
+    background:linear-gradient(90deg,#ef476f,#ff758f);
+}
+
+/* TABLE */
+
+.modern-table thead th{
+    background:#f8fafc;
+    border:none;
+    font-size:.82rem;
+    letter-spacing:.5px;
+    color:#64748b;
+}
+
+.modern-table tbody tr{
+    border:none;
+    transition:.25s;
+}
+
+.modern-table tbody tr:hover{
+    transform:scale(1.01);
+    background:#f8fbff;
+}
+
+.table-avatar{
+    width:36px;
+    height:36px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#4361ee,#4cc9f0);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.status-pill{
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+}
+
+.status-paid{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-pending{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status-overdue{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+/* EMPTY */
+
+.empty-state{
+    text-align:center;
+    padding:30px;
+}
+
+.empty-state i{
+    font-size:3rem;
+    color:#10b981;
+    margin-bottom:14px;
+}
+
+/* GLOW */
+
+.stat-glow-primary:hover{
+    box-shadow:0 25px 50px rgba(67,97,238,.25);
+}
+
+.stat-glow-info:hover{
+    box-shadow:0 25px 50px rgba(14,165,233,.25);
+}
+
+.stat-glow-danger:hover{
+    box-shadow:0 25px 50px rgba(239,68,68,.25);
+}
+
+.stat-glow-success:hover{
+    box-shadow:0 25px 50px rgba(16,185,129,.25);
+}
+
+</style>
 {% endblock %}
 
 {% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+
 const monthlyLabels = {{ monthly_labels|safe }};
 const monthlyTotals = {{ monthly_totals|safe }};
 
-// Monthly Bar Chart
+// MONTHLY CHART
 new Chart(document.getElementById('monthlyChart'), {
-    type: 'bar',
+
+    type: 'line',
+
     data: {
         labels: monthlyLabels,
+
         datasets: [{
-            label: 'Purchase Amount (₹)',
+            label: 'Purchases',
+
             data: monthlyTotals,
-            backgroundColor: 'rgba(67,97,238,0.15)',
+
+            tension: .45,
+
+            fill: true,
+
             borderColor: '#4361ee',
-            borderWidth: 2,
-            borderRadius: 8,
-            hoverBackgroundColor: 'rgba(67,97,238,0.35)',
+
+            backgroundColor: 'rgba(67,97,238,.12)',
+
+            pointBackgroundColor: '#4361ee',
+
+            pointBorderColor: '#fff',
+
+            pointRadius: 5,
+
+            pointHoverRadius: 8,
+
+            borderWidth: 4,
         }]
     },
+
     options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: '#f0f2f8' },
-                ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+
+        maintainAspectRatio:false,
+
+        plugins:{
+            legend:{display:false}
+        },
+
+        scales:{
+            y:{
+                beginAtZero:true,
+                grid:{
+                    color:'rgba(148,163,184,.15)'
+                },
+                ticks:{
+                    callback:v=>'₹'+v.toLocaleString('en-IN')
+                }
             },
-            x: { grid: { display: false } }
+
+            x:{
+                grid:{
+                    display:false
+                }
+            }
         }
     }
 });
 
-// Category Doughnut
+
+// CATEGORY CHART
+
 const catData = {{ cat_data|safe }};
-const catLabels = catData.map(c => c.item__category__name || 'Uncategorized');
+
+const catLabels = catData.map(c => c.item__category__name || 'Others');
 const catTotals = catData.map(c => parseFloat(c.total));
-const colors = ['#4361ee','#4cc9f0','#06d6a0','#ffd60a','#ef476f','#7b2d8b'];
 
 new Chart(document.getElementById('catChart'), {
-    type: 'doughnut',
-    data: {
-        labels: catLabels,
-        datasets: [{
-            data: catTotals,
-            backgroundColor: colors,
-            borderWidth: 0,
-            hoverOffset: 8,
+
+    type:'doughnut',
+
+    data:{
+        labels:catLabels,
+
+        datasets:[{
+            data:catTotals,
+
+            backgroundColor:[
+                '#4361ee',
+                '#4cc9f0',
+                '#06d6a0',
+                '#ffd60a',
+                '#ef476f',
+                '#7209b7'
+            ],
+
+            borderWidth:0,
+
+            hoverOffset:15
         }]
     },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } }
+
+    options:{
+        maintainAspectRatio:false,
+
+        plugins:{
+            legend:{
+                position:'bottom',
+                labels:{
+                    padding:20,
+                    usePointStyle:true
+                }
+            }
         },
-        cutout: '65%',
+
+        cutout:'72%'
     }
 });
+
 </script>
+
 {% endblock %}
