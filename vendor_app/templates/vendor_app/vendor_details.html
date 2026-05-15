@@ -1,0 +1,192 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}{{ vendor.name }} · VendorCredit Pro{% endblock %}
+{% block page_title %}Vendor Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left: Profile + Risk -->
+    <div class="col-lg-4">
+        <div class="form-card mb-3">
+            <div class="text-center mb-4">
+                <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#4361ee,#4cc9f0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:2rem;margin:0 auto 12px;">
+                    {{ vendor.name|first|upper }}
+                </div>
+                <h5 class="fw-bold mb-0">{{ vendor.name }}</h5>
+                <div class="text-muted small">{{ vendor.company_name }}</div>
+                {% if vendor.gstin %}
+                <code class="small">GSTIN: {{ vendor.gstin }}</code>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-semibold">AI Risk Score</span>
+                    <span class="risk-badge risk-{{ vendor.risk_level }}">
+                        <i class="bi bi-shield-fill"></i> {{ vendor.risk_level }}
+                    </span>
+                </div>
+                <div class="risk-progress mb-1" style="height:10px;">
+                    <div class="risk-fill" style="height:10px;width:{{ vendor.risk_score }}%;background:{% if vendor.risk_score > 60 %}#ef476f{% elif vendor.risk_score > 30 %}#ffd60a{% else %}#06d6a0{% endif %};"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted">{{ vendor.risk_score }}/100</small>
+                    <small class="text-muted">Predicted payment: <strong>{{ predicted_payment }}</strong></small>
+                </div>
+            </div>
+
+            <hr>
+            <dl class="row mb-0" style="font-size:.85rem;">
+                <dt class="col-5 text-muted">Phone</dt>
+                <dd class="col-7">{{ vendor.phone }}</dd>
+                <dt class="col-5 text-muted">Email</dt>
+                <dd class="col-7">{{ vendor.email|default:'-' }}</dd>
+                <dt class="col-5 text-muted">Category</dt>
+                <dd class="col-7">{{ vendor.category|default:'-' }}</dd>
+                <dt class="col-5 text-muted">Payment Terms</dt>
+                <dd class="col-7">{{ vendor.get_payment_terms_display }}</dd>
+                <dt class="col-5 text-muted">Credit Limit</dt>
+                <dd class="col-7">₹{{ vendor.credit_limit|floatformat:0 }}</dd>
+            </dl>
+
+            <div class="d-flex gap-2 mt-3">
+                <a href="{% url 'vendor_edit' vendor.pk %}" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                <a href="{% url 'vendor_delete' vendor.pk %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Financials -->
+        <div class="form-card">
+            <h6 class="fw-bold mb-3">Financials</h6>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Total Purchases</span>
+                <strong class="font-monospace">₹{{ vendor.total_purchases|floatformat:2 }}</strong>
+            </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Total Paid</span>
+                <strong class="font-monospace text-success">₹{{ vendor.total_paid|floatformat:2 }}</strong>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted small fw-bold">Outstanding</span>
+                <strong class="font-monospace text-danger fs-6">₹{{ vendor.outstanding_balance|floatformat:2 }}</strong>
+            </div>
+
+            {% if vendor.outstanding_balance > 0 %}
+            <a href="{% url 'payment_create' %}?vendor={{ vendor.pk }}" class="btn btn-success btn-sm w-100 mt-3">
+                <i class="bi bi-cash-stack me-1"></i> Record Payment
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: Charts + Tables -->
+    <div class="col-lg-8">
+        <!-- Monthly Chart -->
+        <div class="chart-card mb-3">
+            <h6><i class="bi bi-graph-up me-2"></i>Monthly Purchase History</h6>
+            <canvas id="vendorChart" height="100"></canvas>
+        </div>
+
+        <!-- Purchases Table -->
+        <div class="data-table mb-3">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Purchases</h6>
+                <a href="{% url 'purchase_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg"></i> New
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr>
+                        <th>Invoice</th><th>Date</th><th>Total</th>
+                        <th>Paid</th><th>Balance</th><th>Status</th><th></th>
+                    </tr></thead>
+                    <tbody>
+                    {% for p in purchases %}
+                    <tr>
+                        <td class="font-monospace fw-semibold">{{ p.invoice_number }}</td>
+                        <td>{{ p.purchase_date }}</td>
+                        <td>₹{{ p.total_amount|floatformat:0 }}</td>
+                        <td class="text-success">₹{{ p.amount_paid|floatformat:0 }}</td>
+                        <td class="{% if p.balance_due > 0 %}text-danger fw-bold{% endif %}">
+                            ₹{{ p.balance_due|floatformat:0 }}
+                        </td>
+                        <td><span class="risk-badge status-{{ p.payment_status }}">{{ p.get_payment_status_display }}</span></td>
+                        <td>
+                            <a href="{% url 'purchase_detail' p.pk %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                            {% if p.balance_due > 0 %}
+                            <a href="{% url 'payment_create_for_purchase' p.pk %}" class="btn btn-sm btn-success"><i class="bi bi-cash"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-3">No purchases yet</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="data-table">
+            <div class="p-3 border-bottom"><h6 class="mb-0 fw-bold">Payment History</h6></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr>
+                        <th>Date</th><th>Amount</th><th>Mode</th><th>Reference</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for pay in payments %}
+                    <tr>
+                        <td>{{ pay.payment_date }}</td>
+                        <td class="fw-bold text-success">₹{{ pay.amount|floatformat:2 }}</td>
+                        <td><span class="badge bg-light text-dark">{{ pay.get_payment_mode_display }}</span></td>
+                        <td class="font-monospace small text-muted">{{ pay.reference_number|default:'-' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-3">No payments recorded</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('vendorChart'), {
+    type: 'line',
+    data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [{
+            label: '₹ Purchases',
+            data: {{ monthly_totals|safe }},
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67,97,238,.08)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#4361ee',
+            pointRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#f0f2f8' },
+                ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

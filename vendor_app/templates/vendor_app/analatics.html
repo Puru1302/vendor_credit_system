@@ -1,0 +1,173 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}Analytics · VendorCredit Pro{% endblock %}
+{% block page_title %}Monthly Analytics{% endblock %}
+
+{% block content %}
+<!-- Summary Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="chart-card h-100">
+            <h6><i class="bi bi-bar-chart-line me-2"></i>12-Month Purchase vs GST Trend</h6>
+            <canvas id="annualChart" height="120"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card h-100">
+            <h6><i class="bi bi-cash me-2"></i>Payment Mode Breakdown</h6>
+            <canvas id="modeChart"></canvas>
+            <div class="mt-3">
+                {% for m in payment_modes %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">{{ m.payment_mode|title }}</span>
+                    <div>
+                        <span class="badge bg-light text-dark me-2">{{ m.count }} txns</span>
+                        <strong>₹{{ m.total|floatformat:0 }}</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Top Vendors -->
+    <div class="col-lg-6">
+        <div class="data-table h-100">
+            <div class="p-3 border-bottom"><h6 class="mb-0 fw-bold"><i class="bi bi-trophy me-2"></i>Top Vendors by Purchase</h6></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>#</th><th>Vendor</th><th>Total</th><th>Risk</th></tr></thead>
+                    <tbody>
+                    {% for v in top_vendors %}
+                    <tr>
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td><a href="{% url 'vendor_detail' v.pk %}">{{ v.name }}</a></td>
+                        <td class="fw-bold font-monospace">₹{{ v.total|floatformat:0 }}</td>
+                        <td><span class="risk-badge risk-{{ v.risk_level }}">{{ v.risk_level }}</span></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Analysis -->
+    <div class="col-lg-6">
+        <div class="chart-card h-100">
+            <h6><i class="bi bi-grid me-2"></i>Category-wise Purchase Volume</h6>
+            <canvas id="catAnalyticsChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- GST Summary -->
+<div class="form-card">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="fw-bold"><i class="bi bi-receipt-cutoff me-2" style="color:#4361ee;"></i>GST Summary</h6>
+            <p class="text-muted small mb-0">Total GST collected in all purchases</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="stat-value text-primary">₹{{ gst_total|floatformat:2 }}</div>
+            <div class="stat-label">Total GST Amount</div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'export_purchases' %}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Full Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = {{ monthly_labels|safe }};
+const purchases = {{ monthly_purchases|safe }};
+const gst = {{ monthly_gst|safe }};
+
+new Chart(document.getElementById('annualChart'), {
+    type: 'bar',
+    data: {
+        labels,
+        datasets: [
+            {
+                label: 'Purchases',
+                data: purchases,
+                backgroundColor: 'rgba(67,97,238,0.2)',
+                borderColor: '#4361ee',
+                borderWidth: 2,
+                borderRadius: 6,
+            },
+            {
+                label: 'GST',
+                data: gst,
+                backgroundColor: 'rgba(255,214,10,0.2)',
+                borderColor: '#ffd60a',
+                borderWidth: 2,
+                borderRadius: 6,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#f0f2f8' },
+                ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Payment mode pie
+const modeData = {{ payment_modes|safe }};
+const modeColors = ['#4361ee','#4cc9f0','#06d6a0','#ffd60a','#ef476f'];
+new Chart(document.getElementById('modeChart'), {
+    type: 'pie',
+    data: {
+        labels: modeData.map(m => m.payment_mode),
+        datasets: [{
+            data: modeData.map(m => parseFloat(m.total)),
+            backgroundColor: modeColors,
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+    }
+});
+
+// Category bar
+const catData = {{ cat_wise|safe }};
+new Chart(document.getElementById('catAnalyticsChart'), {
+    type: 'horizontalBar',
+    type: 'bar',
+    data: {
+        labels: catData.map(c => c.item__category__name || 'Uncategorized'),
+        datasets: [{
+            data: catData.map(c => parseFloat(c.total)),
+            backgroundColor: ['#4361ee','#4cc9f0','#06d6a0','#ffd60a','#ef476f','#7b2d8b'],
+            borderRadius: 6,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

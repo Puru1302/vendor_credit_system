@@ -1,0 +1,114 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}Vendors · VendorCredit Pro{% endblock %}
+{% block page_title %}Vendors{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="form-card mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Search Vendor</label>
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Name, phone, GSTIN...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:'s' %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Risk Level</label>
+            <select name="risk" class="form-select">
+                <option value="">All</option>
+                <option value="LOW" {% if selected_risk == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                <option value="MEDIUM" {% if selected_risk == 'MEDIUM' %}selected{% endif %}>🟡 Medium</option>
+                <option value="HIGH" {% if selected_risk == 'HIGH' %}selected{% endif %}>🔴 High</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+            <a href="{% url 'vendor_list' %}" class="btn btn-light">Reset</a>
+            <a href="{% url 'vendor_create' %}" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Vendor Grid -->
+<div class="row g-3">
+    {% for vendor in vendors %}
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card h-100" style="padding:20px;">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#4361ee,#4cc9f0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.2rem;">
+                        {{ vendor.name|first|upper }}
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">{{ vendor.name }}</h6>
+                        <small class="text-muted">{{ vendor.company_name|default:vendor.phone }}</small>
+                    </div>
+                </div>
+                <span class="risk-badge risk-{{ vendor.risk_level }}">
+                    <i class="bi bi-shield-fill"></i> {{ vendor.risk_level }}
+                </span>
+            </div>
+
+            <!-- Risk Score Bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Risk Score</small>
+                    <small class="fw-bold">{{ vendor.risk_score }}/100</small>
+                </div>
+                <div class="risk-progress">
+                    <div class="risk-fill" style="width:{{ vendor.risk_score }}%;background:{% if vendor.risk_score > 60 %}#ef476f{% elif vendor.risk_score > 30 %}#ffd60a{% else %}#06d6a0{% endif %};"></div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div style="background:#f8f9fe;border-radius:8px;padding:10px 12px;">
+                        <div style="font-size:.65rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Total Purchases</div>
+                        <div class="fw-bold" style="font-family:'Space Mono',monospace;font-size:.9rem;">₹{{ vendor.total_purchases|floatformat:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background:#f8f9fe;border-radius:8px;padding:10px 12px;">
+                        <div style="font-size:.65rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Outstanding</div>
+                        <div class="fw-bold text-danger" style="font-family:'Space Mono',monospace;font-size:.9rem;">₹{{ vendor.outstanding_balance|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'vendor_detail' vendor.pk %}" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-eye me-1"></i> View
+                </a>
+                <a href="{% url 'vendor_edit' vendor.pk %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'payment_create' %}?vendor={{ vendor.pk }}" class="btn btn-success btn-sm">
+                    <i class="bi bi-cash"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-people fs-1 d-block mb-3" style="color:#d0d5ee;"></i>
+        No vendors found. <a href="{% url 'vendor_create' %}">Add your first vendor!</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

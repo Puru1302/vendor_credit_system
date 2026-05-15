@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VendorCredit Pro{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1f3c;
+            --accent: #4361ee;
+            --accent-light: #4cc9f0;
+            --success: #06d6a0;
+            --warning: #ffd60a;
+            --danger: #ef476f;
+            --sidebar-width: 260px;
+            --card-radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f0f2f8;
+            color: #1a1f3c;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            min-height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 4px 0 24px rgba(26,31,60,.18);
+        }
+
+        .sidebar-brand {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .sidebar-brand h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -.5px;
+        }
+
+        .sidebar-brand span {
+            color: var(--accent-light);
+        }
+
+        .sidebar-brand small {
+            display: block;
+            font-size: .65rem;
+            color: rgba(255,255,255,.4);
+            font-family: 'Space Mono', monospace;
+            margin-top: 2px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,.3);
+            text-transform: uppercase;
+            padding: 12px 12px 6px;
+        }
+
+        .sidebar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: rgba(255,255,255,.65);
+            font-size: .875rem;
+            font-weight: 500;
+            transition: all .2s;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            background: rgba(67,97,238,.25);
+            color: #fff;
+        }
+
+        .sidebar-nav .nav-link.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .sidebar-nav .nav-link i { font-size: 1.1rem; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            font-size: .72rem;
+            color: rgba(255,255,255,.3);
+            text-align: center;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: #fff;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e8eaf2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+        .page-body { padding: 28px 32px; flex: 1; }
+
+        /* ── Cards ── */
+        .stat-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(26,31,60,.06);
+            border: 1px solid #eef0f8;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(67,97,238,.12);
+        }
+
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            font-family: 'Space Mono', monospace;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: .78rem;
+            color: #7c82a0;
+            font-weight: 500;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        /* ── Risk Badge ── */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .risk-LOW { background: rgba(6,214,160,.15); color: #059669; }
+        .risk-MEDIUM { background: rgba(255,214,10,.15); color: #b45309; }
+        .risk-HIGH { background: rgba(239,71,111,.15); color: #dc2626; }
+
+        /* ── Status badges ── */
+        .status-paid { background: rgba(6,214,160,.15); color: #059669; }
+        .status-pending { background: rgba(255,214,10,.15); color: #b45309; }
+        .status-partial { background: rgba(67,97,238,.15); color: #4361ee; }
+
+        /* ── Table ── */
+        .data-table {
+            background: #fff;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(26,31,60,.06);
+            border: 1px solid #eef0f8;
+        }
+
+        .data-table .table { margin: 0; }
+        .data-table .table th {
+            background: #f8f9fe;
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: #7c82a0;
+            border-bottom: 1px solid #eef0f8;
+            padding: 14px 16px;
+        }
+
+        .data-table .table td {
+            padding: 13px 16px;
+            border-color: #f0f2f8;
+            font-size: .875rem;
+            vertical-align: middle;
+        }
+
+        .data-table .table tbody tr:hover { background: #f8f9fe; }
+
+        /* ── Buttons ── */
+        .btn-primary { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .btn-primary:hover { background: #3451d1; border-color: #3451d1; }
+
+        .btn-sm { font-size: .78rem; padding: 5px 12px; }
+
+        /* ── Form Card ── */
+        .form-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(26,31,60,.06);
+            border: 1px solid #eef0f8;
+        }
+
+        .form-label { font-weight: 600; font-size: .82rem; color: #4a4f6b; }
+
+        /* ── Chart container ── */
+        .chart-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(26,31,60,.06);
+            border: 1px solid #eef0f8;
+        }
+
+        .chart-card h6 {
+            font-size: .82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: #7c82a0;
+            margin-bottom: 20px;
+        }
+
+        /* ── Alerts ── */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+
+        /* ── Search ── */
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            padding-left: 38px;
+            border-radius: 10px;
+            border: 1.5px solid #e8eaf2;
+            font-size: .875rem;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        /* ── Progress bar ── */
+        .risk-progress { height: 6px; border-radius: 10px; background: #f0f2f8; }
+        .risk-fill { height: 100%; border-radius: 10px; transition: width .4s; }
+
+        /* ── Overdue indicator ── */
+        .overdue-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: inline-block; margin-right: 4px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d0d5ee; border-radius: 10px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-brand h1, .sidebar-brand small, .nav-link span, .nav-section-label { display: none; }
+            .main-content { margin-left: 60px; }
+            .page-body { padding: 16px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h1><span>Vendor</span>Credit<br>Pro</h1>
+        <small>v1.0 · Smart Mgmt</small>
+    </div>
+    <div class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a href="{% url 'analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+            <i class="bi bi-bar-chart-line"></i><span>Analytics</span>
+        </a>
+
+        <div class="nav-section-label">Vendors</div>
+        <a href="{% url 'vendor_list' %}" class="nav-link {% if 'vendor' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-people"></i><span>All Vendors</span>
+        </a>
+        <a href="{% url 'vendor_create' %}" class="nav-link">
+            <i class="bi bi-person-plus"></i><span>Add Vendor</span>
+        </a>
+
+        <div class="nav-section-label">Purchases</div>
+        <a href="{% url 'purchase_list' %}" class="nav-link {% if 'purchase' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-receipt"></i><span>All Purchases</span>
+        </a>
+        <a href="{% url 'purchase_create' %}" class="nav-link">
+            <i class="bi bi-plus-circle"></i><span>New Purchase</span>
+        </a>
+
+        <div class="nav-section-label">Finance</div>
+        <a href="{% url 'payment_create' %}" class="nav-link">
+            <i class="bi bi-cash-stack"></i><span>Record Payment</span>
+        </a>
+        <a href="{% url 'item_list' %}" class="nav-link {% if 'item' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-box-seam"></i><span>Items / SKUs</span>
+        </a>
+
+        <div class="nav-section-label">Export</div>
+        <a href="{% url 'export_purchases' %}" class="nav-link">
+            <i class="bi bi-file-earmark-spreadsheet"></i><span>Export Purchases</span>
+        </a>
+        <a href="{% url 'export_vendors' %}" class="nav-link">
+            <i class="bi bi-file-earmark-person"></i><span>Export Vendors</span>
+        </a>
+    </div>
+    <div class="sidebar-footer">
+        Smart Vendor Credit System<br>© 2024
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+        <div class="topbar-actions">
+            <!-- Quick Search -->
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="globalSearch" class="form-control"
+                       placeholder="Search vendor..." style="width:220px;"
+                       autocomplete="off">
+                <div id="searchDropdown" class="dropdown-menu w-100" style="top:100%;position:absolute;display:none;"></div>
+            </div>
+            <a href="{% url 'purchase_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i> New Purchase
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="toast-container">
+        {% for msg in messages %}
+        <div class="toast show align-items-center text-white bg-{% if msg.tags == 'success' %}success{% elif msg.tags == 'error' %}danger{% else %}primary{% endif %} border-0 mb-2" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">{{ msg }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-body">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Global vendor search
+const searchInput = document.getElementById('globalSearch');
+const searchDropdown = document.getElementById('searchDropdown');
+
+if (searchInput) {
+    let debounce;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(async () => {
+            const q = searchInput.value.trim();
+            if (q.length < 2) { searchDropdown.style.display = 'none'; return; }
+            const resp = await fetch(`/api/vendors/search/?q=${encodeURIComponent(q)}`);
+            const data = await resp.json();
+            if (!data.results.length) { searchDropdown.style.display = 'none'; return; }
+            searchDropdown.innerHTML = data.results.map(v =>
+                `<a class="dropdown-item" href="/vendors/${v.id}/">
+                    <strong>${v.name}</strong>
+                    <small class="text-muted ms-2">${v.phone}</small>
+                </a>`
+            ).join('');
+            searchDropdown.style.display = 'block';
+        }, 300);
+    });
+    document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target)) searchDropdown.style.display = 'none';
+    });
+}
+
+// Auto-dismiss toasts
+document.querySelectorAll('.toast').forEach(t => {
+    setTimeout(() => {
+        t.classList.remove('show');
+    }, 4000);
+});
+
+// Chart.js defaults
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.color = '#7c82a0';
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,128 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}{{ purchase.invoice_number }} · VendorCredit Pro{% endblock %}
+{% block page_title %}Purchase Detail{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="form-card mb-3">
+            <h6 class="fw-bold mb-3">Invoice Details</h6>
+            <dl class="row mb-0" style="font-size:.875rem;">
+                <dt class="col-5 text-muted">Invoice No</dt>
+                <dd class="col-7 font-monospace fw-bold">{{ purchase.invoice_number }}</dd>
+                <dt class="col-5 text-muted">Vendor</dt>
+                <dd class="col-7"><a href="{% url 'vendor_detail' purchase.vendor.pk %}">{{ purchase.vendor.name }}</a></dd>
+                <dt class="col-5 text-muted">Date</dt>
+                <dd class="col-7">{{ purchase.purchase_date }}</dd>
+                <dt class="col-5 text-muted">Due Date</dt>
+                <dd class="col-7 {% if purchase.days_overdue > 0 %}text-danger fw-bold{% endif %}">
+                    {{ purchase.due_date|default:'-' }}
+                    {% if purchase.days_overdue > 0 %}
+                    <br><small>{{ purchase.days_overdue }} days overdue!</small>
+                    {% endif %}
+                </dd>
+                <dt class="col-5 text-muted">Status</dt>
+                <dd class="col-7">
+                    <span class="risk-badge status-{{ purchase.payment_status }}">
+                        {{ purchase.get_payment_status_display }}
+                    </span>
+                </dd>
+            </dl>
+            <hr>
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Subtotal</span>
+                <span class="font-monospace">₹{{ purchase.subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">GST ({{ purchase.gst_rate }}%)</span>
+                <span class="font-monospace text-warning">₹{{ purchase.gst_amount|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small fw-bold">Total</span>
+                <span class="font-monospace fw-bold fs-6">₹{{ purchase.total_amount|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Paid</span>
+                <span class="font-monospace text-success">₹{{ purchase.amount_paid|floatformat:2 }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold">Balance Due</span>
+                <span class="font-monospace fw-bold text-danger fs-5">₹{{ purchase.balance_due|floatformat:2 }}</span>
+            </div>
+            {% if purchase.balance_due > 0 %}
+            <a href="{% url 'payment_create_for_purchase' purchase.pk %}" class="btn btn-success w-100 mt-3">
+                <i class="bi bi-cash-stack me-1"></i> Record Payment
+            </a>
+            {% endif %}
+            <a href="{% url 'purchase_edit' purchase.pk %}" class="btn btn-light w-100 mt-2 btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit Purchase
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Purchase Items -->
+        <div class="data-table mb-3">
+            <div class="p-3 border-bottom"><h6 class="mb-0 fw-bold">Line Items</h6></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr>
+                        <th>Item</th><th>Qty</th><th>Unit</th><th>Unit Price</th>
+                        <th>GST</th><th>Line Total</th><th>Est. Profit</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.item_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td><span class="badge bg-light text-dark">{{ item.unit }}</span></td>
+                        <td>₹{{ item.unit_price|floatformat:2 }}</td>
+                        <td>{{ item.gst_rate }}%</td>
+                        <td class="fw-bold">₹{{ item.line_total|floatformat:2 }}</td>
+                        <td class="{% if item.estimated_profit > 0 %}text-success{% endif %}">
+                            {% if item.estimated_profit %}
+                            ₹{{ item.estimated_profit|floatformat:2 }}
+                            {% else %}-{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-3">No line items added</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Payment History</h6>
+                {% if purchase.balance_due > 0 %}
+                <a href="{% url 'payment_create_for_purchase' purchase.pk %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-lg"></i> Payment
+                </a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Reference</th><th>Notes</th></tr></thead>
+                    <tbody>
+                    {% for pay in payments %}
+                    <tr>
+                        <td>{{ pay.payment_date }}</td>
+                        <td class="fw-bold text-success font-monospace">₹{{ pay.amount|floatformat:2 }}</td>
+                        <td><span class="badge bg-light text-dark">{{ pay.get_payment_mode_display }}</span></td>
+                        <td class="font-monospace small">{{ pay.reference_number|default:'-' }}</td>
+                        <td class="text-muted small">{{ pay.notes|default:'-' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-3">No payments yet</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

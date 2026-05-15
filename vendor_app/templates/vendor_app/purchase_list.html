@@ -1,0 +1,92 @@
+{% extends 'vendor_app/base.html' %}
+{% block title %}Purchases · VendorCredit Pro{% endblock %}
+{% block page_title %}Purchases{% endblock %}
+
+{% block content %}
+<div class="form-card mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Vendor</label>
+            <select name="vendor" class="form-select">
+                <option value="">All Vendors</option>
+                {% for v in vendors %}
+                <option value="{{ v.id }}" {% if vendor_id == v.id|stringformat:'s' %}selected{% endif %}>{{ v.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="partial" {% if status == 'partial' %}selected{% endif %}>Partial</option>
+                <option value="paid" {% if status == 'paid' %}selected{% endif %}>Paid</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">From Date</label>
+            <input type="date" name="date_from" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">To Date</label>
+            <input type="date" name="date_to" class="form-control">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button>
+            <a href="{% url 'purchase_list' %}" class="btn btn-light">Reset</a>
+            <a href="{% url 'purchase_create' %}" class="btn btn-success"><i class="bi bi-plus-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="data-table">
+    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold">All Purchases ({{ purchases.count }})</h6>
+        <a href="{% url 'export_purchases' %}" class="btn btn-light btn-sm">
+            <i class="bi bi-download me-1"></i> Export CSV
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr>
+                <th>Invoice</th><th>Vendor</th><th>Date</th><th>Due</th>
+                <th>Subtotal</th><th>GST</th><th>Total</th>
+                <th>Paid</th><th>Balance</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for p in purchases %}
+            <tr>
+                <td class="font-monospace fw-semibold">
+                    {% if p.days_overdue > 0 %}<span class="overdue-dot" title="{{ p.days_overdue }} days overdue"></span>{% endif %}
+                    {{ p.invoice_number }}
+                </td>
+                <td><a href="{% url 'vendor_detail' p.vendor.pk %}">{{ p.vendor.name }}</a></td>
+                <td>{{ p.purchase_date }}</td>
+                <td class="{% if p.days_overdue > 0 %}text-danger fw-semibold{% endif %}">
+                    {{ p.due_date|default:'-' }}
+                    {% if p.days_overdue > 0 %}<br><small>({{ p.days_overdue }}d late)</small>{% endif %}
+                </td>
+                <td>₹{{ p.subtotal|floatformat:0 }}</td>
+                <td><span class="badge bg-light text-dark">{{ p.gst_rate }}%</span> ₹{{ p.gst_amount|floatformat:0 }}</td>
+                <td class="fw-bold">₹{{ p.total_amount|floatformat:0 }}</td>
+                <td class="text-success">₹{{ p.amount_paid|floatformat:0 }}</td>
+                <td class="{% if p.balance_due > 0 %}text-danger fw-bold{% endif %}">₹{{ p.balance_due|floatformat:0 }}</td>
+                <td><span class="risk-badge status-{{ p.payment_status }}">{{ p.get_payment_status_display }}</span></td>
+                <td>
+                    <a href="{% url 'purchase_detail' p.pk %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                    {% if p.balance_due > 0 %}
+                    <a href="{% url 'payment_create_for_purchase' p.pk %}" class="btn btn-sm btn-success"><i class="bi bi-cash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="11" class="text-center py-5 text-muted">
+                <i class="bi bi-receipt fs-1 d-block mb-3" style="color:#d0d5ee;"></i>
+                No purchases found. <a href="{% url 'purchase_create' %}">Add one!</a>
+            </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
