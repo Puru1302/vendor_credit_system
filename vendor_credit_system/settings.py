@@ -4,7 +4,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-vendor-credit-mgmt-2024-change-in-production'
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,6 +24,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'vendor_credit_system.urls'
@@ -50,11 +51,11 @@ WSGI_APPLICATION = 'vendor_credit_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'vendor_credit_db',
-        'USER': 'root',
-        'PASSWORD': 'Puru@132002',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': os.environ.get("vendor_credit_db"),
+        'USER': os.environ.get("root"),
+        'PASSWORD': os.environ.get("rPFcstlStzVaullaxVJmttHwsrPBPfrN"),
+        'HOST': os.environ.get("mysql.railway.internal"),
+        'PORT': os.environ.get("3306"),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -76,6 +77,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
