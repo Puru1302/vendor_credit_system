@@ -28,6 +28,8 @@ urlpatterns = [
     # Items
     path('items/', views.item_list, name='item_list'),
     path('items/add/', views.item_create, name='item_create'),
+    path('items/edit/<int:pk>/', views.item_update, name='item_update'),
+    path('items/delete/<int:pk>/', views.item_delete, name='item_delete'),
 
     # Export
     path('export/purchases/', views.export_purchases_csv, name='export_purchases'),

@@ -14,6 +14,20 @@ from datetime import datetime, timedelta
 from .models import Vendor, Purchase, PurchaseItem, Payment, Item, Category
 from .forms import VendorForm, PurchaseForm, PurchaseItemFormSet, PaymentForm, ItemForm
 
+def _skip_blank_item_rows(formset):
+    """Any newly-added row the user left completely blank is treated as
+    optional, so it's silently ignored instead of raising 'required' errors."""
+    for f in formset.forms:
+        if f.instance.pk:
+            continue  # existing saved rows are validated normally
+        prefix = f.prefix
+        data = f.data
+        item_id = (data.get(f'{prefix}-item') or '').strip()
+        item_name = (data.get(f'{prefix}-item_name') or '').strip()
+        qty = (data.get(f'{prefix}-quantity') or '').strip()
+        price = (data.get(f'{prefix}-unit_price') or '').strip()
+        if not any([item_id, item_name, qty, price]):
+            f.empty_permitted = True
 
 # ─── Dashboard ──────────────────────────────────────────────
 def dashboard(request):
@@ -206,13 +220,45 @@ def purchase_list(request):
 def purchase_create(request):
     if request.method == 'POST':
         form = PurchaseForm(request.POST)
-        if form.is_valid():
-            purchase = form.save()
+        formset = PurchaseItemFormSet(request.POST)
+        _skip_blank_item_rows(formset)
+
+        if form.is_valid() and formset.is_valid():
+            purchase = form.save(commit=False)
+
+            subtotal = Decimal('0')
+            for f in formset:
+                cd = f.cleaned_data
+                if cd and not cd.get('DELETE') and cd.get('quantity') and cd.get('unit_price'):
+                    subtotal += Decimal(cd['quantity']) * Decimal(cd['unit_price'])
+
+            purchase.subtotal = subtotal
+            purchase.save()
+
+            formset.instance = purchase
+            formset.save()
+
             messages.success(request, f'Purchase {purchase.invoice_number} added!')
             return redirect('purchase_detail', pk=purchase.pk)
     else:
         form = PurchaseForm()
-    return render(request, 'vendor_app/purchase_form.html', {'form': form, 'title': 'New Purchase'})
+        formset = PurchaseItemFormSet()
+
+    items = Item.objects.filter(is_active=True).values(
+        'id', 'name', 'unit', 'default_gst_rate', 'selling_price')
+    items_data = {
+        str(i['id']): {
+            'name': i['name'], 'unit': i['unit'],
+            'gst_rate': i['default_gst_rate'], 'price': str(i['selling_price'])
+        } for i in items
+    }
+
+    return render(request, 'vendor_app/purchase_form.html', {
+        'form': form,
+        'formset': formset,
+        'title': 'New Purchase',
+        'items_json': json.dumps(items_data),
+    })
 
 
 def purchase_detail(request, pk):
@@ -230,13 +276,39 @@ def purchase_edit(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk)
     if request.method == 'POST':
         form = PurchaseForm(request.POST, instance=purchase)
-        if form.is_valid():
-            form.save()
+        formset = PurchaseItemFormSet(request.POST, instance=purchase)
+        _skip_blank_item_rows(formset)
+
+        if form.is_valid() and formset.is_valid():
+            purchase = form.save(commit=False)
+            formset.save()
+
+            subtotal = purchase.items.aggregate(total=Sum('line_total'))['total'] or Decimal('0')
+            purchase.subtotal = subtotal
+            purchase.save()
+
             messages.success(request, 'Purchase updated!')
             return redirect('purchase_detail', pk=pk)
     else:
         form = PurchaseForm(instance=purchase)
-    return render(request, 'vendor_app/purchase_form.html', {'form': form, 'title': 'Edit Purchase', 'purchase': purchase})
+        formset = PurchaseItemFormSet(instance=purchase)
+
+    items = Item.objects.filter(is_active=True).values(
+        'id', 'name', 'unit', 'default_gst_rate', 'selling_price')
+    items_data = {
+        str(i['id']): {
+            'name': i['name'], 'unit': i['unit'],
+            'gst_rate': i['default_gst_rate'], 'price': str(i['selling_price'])
+        } for i in items
+    }
+
+    return render(request, 'vendor_app/purchase_form.html', {
+        'form': form,
+        'formset': formset,
+        'title': 'Edit Purchase',
+        'purchase': purchase,
+        'items_json': json.dumps(items_data),
+    })
 
 
 # ─── Payment ────────────────────────────────────────────────
@@ -395,3 +467,46 @@ def item_create(request):
     else:
         form = ItemForm()
     return render(request, 'vendor_app/item_form.html', {'form': form})
+
+def item_update(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+
+    if request.method == "POST":
+        form = ItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Item updated successfully!")
+            return redirect("item_list")
+    else:
+        form = ItemForm(instance=item)
+
+    return render(
+        request,
+        "vendor_app/item_form.html",
+        {
+            "form": form,
+            "title": "Edit Item",
+        },
+    )
+
+
+def item_delete(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+
+    if request.method == "POST":
+        item.is_active = False      # Soft delete
+        item.save()
+
+        # OR use item.delete() if you want permanent deletion
+
+        messages.success(request, "Item deleted successfully!")
+        return redirect("item_list")
+
+    return render(
+        request,
+        "vendor_app/confirm_delete.html",
+        {
+            "object": item,
+            "type": "Item",
+        },
+    )

@@ -208,13 +208,15 @@ class Purchase(models.Model):
 
 
 class PurchaseItem(models.Model):
+    GST_CHOICES = [
+        ('0', '0%'), ('5', '5%'), ('12', '12%'), ('18', '18%'), ('28', '28%'),]
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='items')
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True)
     item_name = models.CharField(max_length=200)
     quantity = models.DecimalField(max_digits=10, decimal_places=3)
     unit = models.CharField(max_length=20, default='piece')
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    gst_rate = models.CharField(max_length=3, default='18')
+    gst_rate = models.CharField(max_length=3, choices=GST_CHOICES, default='18')
     line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):

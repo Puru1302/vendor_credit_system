@@ -24,8 +24,7 @@ class VendorForm(forms.ModelForm):
 class PurchaseForm(forms.ModelForm):
     class Meta:
         model = Purchase
-        fields = ['vendor', 'invoice_number', 'purchase_date', 'due_date',
-                  'subtotal', 'gst_rate', 'notes']
+        fields = ['vendor', 'invoice_number', 'purchase_date', 'due_date', 'gst_rate', 'notes']
         widgets = {
             'vendor': forms.Select(attrs={'class': 'form-select'}),
             'invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'INV-2024-001'}),

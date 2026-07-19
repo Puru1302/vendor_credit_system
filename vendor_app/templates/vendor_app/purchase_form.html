@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
         <div class="form-card">
             <h5 class="fw-bold mb-4">{{ title }}</h5>
             <form method="post" id="purchaseForm">
@@ -28,16 +28,81 @@
                         <small class="text-muted">Auto-calculated from vendor terms</small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Subtotal (₹) *</label>
-                        {{ form.subtotal }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">GST Rate</label>
+                        <label class="form-label">GST Rate (default for new rows)</label>
                         {{ form.gst_rate }}
                     </div>
                 </div>
 
-                <!-- Live GST Calculation Preview -->
+                <!-- ── Line Items ───────────────────────────────── -->
+                <hr class="my-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">Items</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addItemRow">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+
+                {{ formset.management_form }}
+
+                <div class="table-responsive">
+                    <table class="table align-middle" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="min-width:200px;">Item</th>
+                                <th style="width:100px;">Qty</th>
+                                <th style="width:100px;">Unit</th>
+                                <th style="width:130px;">Unit Price (₹)</th>
+                                <th style="width:100px;">GST %</th>
+                                <th style="width:130px;">Line Total</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemRows">
+                        {% for f in formset %}
+                            <tr class="item-row">
+                                <td>
+                                    {{ f.id }}
+                                    {{ f.item }}
+                                    {{ f.item_name }}
+                                </td>
+                                <td>{{ f.quantity }}</td>
+                                <td>{{ f.unit }}</td>
+                                <td>{{ f.unit_price }}</td>
+                                <td>{{ f.gst_rate }}</td>
+                                <td class="line-total fw-semibold">₹0.00</td>
+                                <td>
+                                    {% if f.instance.pk %}
+                                        <div class="form-check">{{ f.DELETE }}</div>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-light remove-row"><i class="bi bi-x-lg"></i></button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty form template for JS cloning -->
+                <table style="display:none;">
+                    <tbody id="emptyFormRow">
+                        <tr class="item-row">
+                            <td>
+                                {{ formset.empty_form.id }}
+                                {{ formset.empty_form.item }}
+                                {{ formset.empty_form.item_name }}
+                            </td>
+                            <td>{{ formset.empty_form.quantity }}</td>
+                            <td>{{ formset.empty_form.unit }}</td>
+                            <td>{{ formset.empty_form.unit_price }}</td>
+                            <td>{{ formset.empty_form.gst_rate }}</td>
+                            <td class="line-total fw-semibold">₹0.00</td>
+                            <td><button type="button" class="btn btn-sm btn-light remove-row"><i class="bi bi-x-lg"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Live Totals Preview -->
                 <div class="mt-4 p-3" style="background:#f8f9fe;border-radius:12px;border:1.5px dashed #e8eaf2;">
                     <div class="row text-center g-2">
                         <div class="col-4">
@@ -66,8 +131,12 @@
                     </button>
                     <a href="{% url 'purchase_list' %}" class="btn btn-light px-4">Cancel</a>
                 </div>
-                {% if form.errors %}
-                <div class="alert alert-danger mt-3">{{ form.errors }}</div>
+                {% if form.errors or formset.errors %}
+                <div class="alert alert-danger mt-3">
+                    {{ form.errors }}
+                    {{ formset.non_form_errors }}
+                    {% for f in formset %}{{ f.errors }}{% endfor %}
+                </div>
                 {% endif %}
             </form>
         </div>
@@ -77,9 +146,57 @@
 
 {% block extra_js %}
 <script>
-function updateGst() {
-    const subtotal = parseFloat(document.getElementById('id_subtotal').value) || 0;
-    const rate = parseFloat(document.getElementById('id_gst_rate').value) || 0;
+const ITEMS_DATA = {{ items_json|safe }};
+let formCount = document.querySelector('#id_items-TOTAL_FORMS').value ? parseInt(document.getElementById('id_items-TOTAL_FORMS').value) : 0;
+
+function getRowFields(row) {
+    return {
+        itemSelect: row.querySelector('select[id$="-item"]'),
+        itemName: row.querySelector('input[id$="-item_name"]'),
+        qty: row.querySelector('input[id$="-quantity"]'),
+        unit: row.querySelector('input[id$="-unit"]'),
+        price: row.querySelector('input[id$="-unit_price"]'),
+        gst: row.querySelector('select[id$="-gst_rate"]'),
+        lineTotalCell: row.querySelector('.line-total'),
+    };
+}
+
+function onItemSelected(row) {
+    const f = getRowFields(row);
+    const data = ITEMS_DATA[f.itemSelect.value];
+    if (data) {
+        f.itemName.value = data.name;
+        f.unit.value = data.unit;
+        f.gst.value = data.gst_rate;
+        if (!f.price.value || parseFloat(f.price.value) === 0) {
+            f.price.value = data.price;
+        }
+    }
+    recalcAll();
+}
+
+function recalcRow(row) {
+    const f = getRowFields(row);
+    const qty = parseFloat(f.qty.value) || 0;
+    const price = parseFloat(f.price.value) || 0;
+    const total = qty * price;
+    f.lineTotalCell.textContent = '₹' + total.toFixed(2);
+    return total;
+}
+
+function recalcAll() {
+    let subtotal = 0;
+    document.querySelectorAll('#itemRows .item-row').forEach(row => {
+        const deleteBox = row.querySelector('input[type="checkbox"][id$="-DELETE"]');
+        if (deleteBox && deleteBox.checked) {
+            row.querySelector('.line-total').textContent = '₹0.00';
+            return;
+        }
+        subtotal += recalcRow(row);
+    });
+
+    const overallGstSelect = document.getElementById('id_gst_rate');
+    const rate = overallGstSelect ? parseFloat(overallGstSelect.value) || 0 : 0;
     const gst = subtotal * rate / 100;
     const total = subtotal + gst;
 
@@ -88,8 +205,47 @@ function updateGst() {
     document.getElementById('previewTotal').textContent = '₹' + total.toFixed(2);
 }
 
-document.getElementById('id_subtotal').addEventListener('input', updateGst);
-document.getElementById('id_gst_rate').addEventListener('change', updateGst);
-updateGst();
+function attachRowListeners(row) {
+    const f = getRowFields(row);
+    if (f.itemSelect) f.itemSelect.addEventListener('change', () => onItemSelected(row));
+    if (f.qty) f.qty.addEventListener('input', recalcAll);
+    if (f.price) f.price.addEventListener('input', recalcAll);
+    if (f.gst) f.gst.addEventListener('change', recalcAll);
+
+    const removeBtn = row.querySelector('.remove-row');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            recalcAll();
+        });
+    }
+    const deleteBox = row.querySelector('input[type="checkbox"][id$="-DELETE"]');
+    if (deleteBox) {
+        deleteBox.addEventListener('change', () => {
+            row.style.opacity = deleteBox.checked ? '0.4' : '1';
+            recalcAll();
+        });
+    }
+}
+
+document.querySelectorAll('#itemRows .item-row').forEach(attachRowListeners);
+
+document.getElementById('addItemRow').addEventListener('click', () => {
+    const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+    const newIndex = parseInt(totalFormsInput.value);
+    const templateHtml = document.getElementById('emptyFormRow').innerHTML.replace(/__prefix__/g, newIndex);
+
+    const tempTable = document.createElement('table');
+    tempTable.innerHTML = '<tbody>' + templateHtml + '</tbody>';
+    const newRow = tempTable.querySelector('tr');
+
+    document.getElementById('itemRows').appendChild(newRow);
+    attachRowListeners(newRow);
+
+    totalFormsInput.value = newIndex + 1;
+});
+
+document.getElementById('id_gst_rate').addEventListener('change', recalcAll);
+recalcAll();
 </script>
 {% endblock %}
